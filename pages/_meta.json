@@ -1,11 +1,10 @@
 {
   "index": "Introduction",
-  "another": "Another Page",
-  "advanced": "Advanced (A Folder)",
-  "about": {
-    "title": "About",
-    "type": "page"
-  },
+  "app-setup": "App Setup",
+  "dashboard": "Dashboard",
+  "authentication": "Authentication",
+  "stripe": "Stripe",
+  "tech-stack": "Tech Stack",
   "contact": {
     "title": "Contact ↗",
     "type": "page",

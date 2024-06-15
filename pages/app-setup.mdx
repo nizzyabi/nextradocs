@@ -1,0 +1,209 @@
+# App Setup
+
+Firstly, you need to clone the repository. You can do it like this:
+
+```bash
+# Using Git
+git clone https://github.com/NizarAbiZaher/nizzy-starter.git
+
+# Using GitHub CLI
+gh repo clone NizarAbiZaher/nizzy-starter
+```
+
+### Setup using NPM
+
+This starter kit currently uses NPM as the package manager, if you use any other package manager follow [this section](#setup-using-different-package-managers).
+
+Follow the steps below to correctly setup the project on your machine, and ensure everything works as expected.
+
+First, install the modules and dependencies:
+
+```bash
+npm install
+```
+
+When that's done, you need to setup your `.env` file. On the root folder of your project you should see a file called `.env.example`. That file already contains a written guide to get the variables you need, but bellow will be the same steps in case you can't find it.
+
+### Setup using different package managers
+
+Follow the steps below to correctly setup the project on your machine, and ensure everything works as expected.
+
+Since you wont use NPM, you need to remove the `package-lock.json` to prevent any possible conflicts.
+
+Install the modules and dependencies:
+
+```bash
+# Using pnpm
+pnpm install
+
+# Using yarn
+yarn install
+
+# Using bun
+bun install
+```
+
+If you dont use any of these, find the equivalent command for your package manager.
+
+#### Create the environment variables file
+
+On the root folder of your project, create a file called `.env` or `.env.local` and paste the following:
+
+```env
+DATABASE_URL=""
+DIRECT_URL=""
+APP_URL="http://localhost:3000"
+AUTH_SECRET=""
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+RESEND_API_KEY=""
+STRIPE_API_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+```
+
+You are not required to use quotes your variables, although its recommended because in some cases, due to some special characters, it can mess up the variable.
+
+#### Connect your database
+
+You can use any database of your choice, i like to use [Neon](https://neon.tech/). You can watch [this video](https://youtu.be/ZAjOep8-M-Y?si=L94KHhlbV27y-V_O) if you want help related to database configuration.
+
+If you already have a database prepared and know how to use it, you can just get the Database URL and Direct URL.
+
+Example:
+
+```env
+DATABASE_URL="postgresql://username:password@hostname:port/database_name"
+DIRECT_URL="postgresql://username:password@hostname:port/database_name"
+```
+
+#### App URL
+
+Change this value when deploying your application.
+
+Example:
+
+```env
+APP_URL="https://example.com/"
+```
+
+#### Auth Secret
+
+The auth system was made using NextAuth, which required an auth secret for it to work. You can use any Secret generator, such as [https://generate-secret.vercel.app/32](https://generate-secret.vercel.app/32).
+
+Example:
+
+```env
+AUTH_SECRET="bae23fc1c21a41743058c56a366459a2"
+```
+
+#### GitHub Client ID and Client Secret
+
+To setup Github Oauth, you must get both client & client secret key from [GitHub Developers](https://github.com/settings/developers). For more information on how to setup, go to [Github Oauth] (https://console.cloud.google.com)
+
+Example:
+
+```env
+GITHUB_CLIENT_ID="abc123def456ghi789jkl"
+GITHUB_CLIENT_SECRET="s3cr3tK3yV@lu3!"
+```
+
+Disclaimer: This was generated as an example from ChatGPT and will not work.
+
+#### Google Client ID and Client Secret
+
+To setup Google Oauth, you must grab both client & client secret keys from [Google Cloud Console](https://console.cloud.google.com). For more information on how to setup, go to [Google Oauth](https://console.cloud.google.com)
+
+Example:
+
+```env
+GOOGLE_CLIENT_ID="1234567890-abcde12345fghij67890klmno.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="XyZ_1234567890AbCdEfGhIj"
+```
+
+#### Resend API Key
+
+Go to [Resend Website](https://resend.com/home) and on the **API Keys** section create a new API key. Fill the inputs and configure the settings as you wish, then copy the key and populate the respective variable.
+
+Example:
+
+```env
+RESEND_API_KEY="re_2514c2801e44bed9a3bdf9e094e2ce1c"
+```
+
+#### Stripe API Key and Webhook Secret
+
+You can find both at [Stripe](https://stripe.com). For more setup information you can checkout [this video](https://youtu.be/5hSEEod_BuA?si=377LS1z0ThLcs46T).
+
+Example:
+
+```env
+STRIPE_API_KEY="sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+STRIPE_WEBHOOK_SECRET="whsec_1234567890abcdef1234567890abcdef"
+```
+
+#### Full `.env` file example
+
+```env
+DATABASE_URL="postgresql://username:password@hostname:port/database_name"
+DIRECT_URL="https://api.example.com/endpoint"
+APP_URL="https://example.com/"
+AUTH_SECRET="bae23fc1c21a41743058c56a366459a2"
+GITHUB_CLIENT_ID="abc123def456ghi789jkl"
+GITHUB_CLIENT_SECRET="s3cr3tK3yV@lu3!"
+GOOGLE_CLIENT_ID="1234567890-abcde12345fghij67890klmno.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="XyZ_1234567890AbCdEfGhIj"
+RESEND_API_KEY="re_2514c2801e44bed9a3bdf9e094e2ce1c"
+STRIPE_API_KEY="sk_test_4eC39HqLyjWDarjtT1zdp7dc"
+STRIPE_WEBHOOK_SECRET="whsec_1234567890abcdef1234567890abcdef"
+```
+
+### Generating the Database tables
+
+Now that the env variables are setup, we need to create the tables in your database in order for the authentication and analytics to work. To do so, run the following command:
+
+```bash
+npm run database
+```
+
+If you have any trouble in this process, please open an issue or join my discord for help.
+
+### Running the project
+
+In order to verify if everything is working properly and to further customize the project to your own SaaS, you need to start a local development server. You can do so using any of the following commands:
+
+```bash
+# Using npm
+npm run dev
+
+# Using pnpm
+pnpm run dev
+
+# Using yarn
+yarn run dev
+
+# Using bun
+bun run dev
+```
+
+It should output something like this:
+
+```bash
+  ▲ Next.js 14.2.3
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+  ✓ Starting...
+  ✓ Ready in 2.4s
+```
+
+If this is the case, you can just **CTRL** + **Click** on http://localhost:3000, or manually opening it on your browser.
+
+If this is not the case, make sure you didn't miss any of the steps before. If the error persists and you don't know what to do, open an issue [here](https://github.com/NizarAbiZaher/nizzy-starter/issues).
+
+### That's it!
+
+You should now be able to edit and change whatever you'd like, if you are having trouble with specific libraries, make sure to check out the respective documentation and properly research about the issue.
+
+Make sure you remove the Alert at the top if you intend to use this starter kit. To do so go to `app/layout.tsx` and remove the `<AlertDemo />` component (you may also delete it from `components/alert.tsx`).
