@@ -1,16 +1,32 @@
-# Stripe
+# Stripe Integration Guide
 
-We use StripeJS in order to receive payments from users & create reccuring subscriptions. Below is a series of code blocks that we used throughout the app to receive payments from our users. 
+This guide will help you set up Stripe in your application to receive payments and create recurring subscriptions. 
 
-#### Stripe Setup
+#### Prerequisites
 
-To setup stripe, kindly checkout the documentation [here](https://docs.stripe.com/)
-
-You will need these enviornment variables to continue:
+You will need the following environment variables::
 ```env filename=".env"
 STRIPE_API_KEY=""
 STRIPE_WEBHOOK_SECRET=""
 ```
+
+To obtain these, sign up at [stripe.com](https://stripe.com) and follow these steps:
+
+1. Get your secret key: Navigate to the Developers section in the Stripe dashboard and copy your secret key (starts with sk).
+2. Set up webhooks: Add a new endpoint for webhooks in your Stripe dashboard.
+
+#### Install Stripe
+
+Install the Stripe package and log in:
+
+```bash filename="terminal"
+npm i stripe
+
+stripe login
+```
+
+**NOTE**:Dont worry about the STRIPE WEBHOOK SECRET just yet, we need to setup stripe in our code before doing it. 
+
 
 ***For a full detailed video, checkout the video below:***
 <iframe
@@ -20,9 +36,9 @@ STRIPE_WEBHOOK_SECRET=""
     title="SWR-States"
   />
 
-### Connect Stripe To Code
+### Connect Stripe To Your Code
 
-This connection code allows us to, well, connect to stripe using the Stripe import and the stripe api key. 
+Create a file named lib/stripe.ts to connect to Stripe using your API key.
 
 ``` ts filename="lib/stripe.ts"
 import Stripe from 'stripe'
@@ -34,9 +50,7 @@ export const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
 ```
 #### Webhook
 
-Stripe Webhook is where we create the payment session, input a price, and setup most of stripe in order receive payments from users.
-
-***This is what the final version of the stripe webhook should look like:***
+Webhooks handle events like payment sessions and subscription updates. Here's how to set up a webhook endpoint:
 
 ```ts filename="app/api/webhook/route.ts"
 import Stripe from 'stripe'
@@ -104,9 +118,7 @@ export async function POST(req: Request) {
 
 #### Checkout
 
-Stripe Checkout is where we create the stripe customer & manage everything AFTER the user has either paid or failed to pay. For example, once the user successfully pays, we want to re-route them to a success page in order to let them know that their payment went through successfully. 
-
-***This is what the final version of the stripe checkout should look like:***
+Set up the checkout process to handle customer payments and reroute them to a success page upon successful payment.
 
 ``` ts filename="app/api/checkout/route.ts"
 import { auth } from '@/auth'
@@ -178,7 +190,7 @@ export async function POST(req: Request) {
 
 ### Payment Button
 
-Once we have both the checkout & webhook finished, we are now able to create a button for the user to go to the stripe page and pay for the item we are selling:
+Create a button to redirect users to the Stripe payment page:
 
 ``` ts filename="components/pricing-card.tsx"
 'use client'
@@ -336,12 +348,18 @@ export const PricingCard = () => {
 
 #### Testing
 
-To test stripe in our local enviornment, you must run
+To test Stripe in your local environment, run:
 
 ```bash filename="terminal"
 stripe listen --forward-to localhost:3000/api/webhook
 ```
 
-This will run stripe in your local enviornment & allow us to test stripe. If it works, you will be redirected to the stripe page (as seen below)
+This command will listen for webhook events and forward them to your local endpoint, allowing you to test the Stripe integration. When successful, you'll be redirected to the Stripe payment page, as shown below:
 
 ![Dash](/stripe-paymentpage.png)
+
+#### Conclusion
+
+By following this guide, you should have a working Stripe integration in your application, capable of handling both one-time payments and recurring subscriptions. Ensure to thoroughly test each part of the integration in your local environment before deploying to production.
+
+For additional help, refer to the [Stripe documentation](https://docs.stripe.com/) or the detailed video guide above.
