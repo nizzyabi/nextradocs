@@ -13,19 +13,6 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
-.clean-btn svg {
-  color: var(--ifm-color-primary);
-}
-
-.clean-btn:hover {
-  background-color: var(--ifm-color-primary-hover);
-}
-
-.buttonGroup_node_modules--pnpm-\@docusaurus\+theme-classic\@3-4-0_\@types\+react\@18-3-3_react-dom\@18-3-1_react\@18-3-1__react\@18-3-1_typescript\@5-2-2-node_modules-\@docusaurus-theme-classic-lib-theme-CodeBlock-Content-styles-module
-  button {
-  border-color: var(--ifm-color-primary-border) !important;
-}
-
 code {
   background-color: var(--ifm-color-primary-hover);
   border-color: var(--ifm-color-primary-border-half);

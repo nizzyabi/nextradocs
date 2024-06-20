@@ -1,0 +1,159 @@
+# OAuth
+
+## Google OAuth Setup
+
+This guide will help you set up Google OAuth to enable user authentication via Google in your application.
+
+### Prerequisites
+
+You will need to obtain the Google Client ID and Client Secret from the Google Cloud Console.
+
+### Steps to Obtain Google Client ID and Client Secret
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com).
+2. Create a new project or select an existing project (navbar).
+   ![Oatuh](@site/static/img/google-new-project.png)
+3. Enable the Google+ API for your project.
+4. Create OAuth 2.0 credentials:
+
+- Navigate to APIs & Services > Credentials.
+- Click on Create credentials and select OAuth 2.0 Client IDs.
+- Configure the OAuth consent screen if you haven't done so already.
+- Select Web application and set the authorized redirect URIs (redirect URI should be: http://localhost:3000/api/auth/callback/google).
+
+For more information, refer to the [Google OAuth Documentation](https://cloud.google.com/apigee?utm_source=google&utm_medium=cpc&utm_campaign=na-CA-all-en-dr-bkws-all-all-trial-b-dr-1707554&utm_content=text-ad-none-any-DEV_c-CRE_665735485403-ADGP_Hybrid+%7C+BKWS+-+MIX+%7C+Txt-API+Management-Apigee-KWID_43700077225654810-kwd-62094780&utm_term=KW_google%20api-ST_google+api&gad_source=1&gclid=Cj0KCQjw97SzBhDaARIsAFHXUWCRlIlKjqzWmcYYRtYaCWNz5Luyv3MHQDdUHF_Vvnwjwyh_P-hYee8aAqx5EALw_wcB&gclsrc=aw.ds).
+
+### Environment Variables
+
+Add the following environment variables to your .env file:
+
+```env title=".env.local"
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""
+```
+
+## Github OAtuh Setup
+
+### Prerequisites
+
+You will need to obtain the GitHub Client ID and Client Secret from the GitHub Developer Settings.
+
+### Steps to Obtain GitHub Client ID and Client Secret
+
+1. Go to the Github Developer Settings
+2. Register a new OAuth application:
+
+- Click on New OAuth App.
+- Fill in the required fields such as application name, - homepage URL, and callback URL (should be: http://localhost:3000/api/auth/callback/github).
+  ![Oatuh](@site/static/img/github-oauth-setup.png)
+- After registering, you will receive a Client ID and Client Secret.
+
+### Environment Variables
+
+Add the following environment variables to your .env file:
+
+```env title=".env.local"
+GITHUB_CLIENT_ID=""
+GITHUB_CLIENT_SECRET=""
+```
+
+## OAuth Setup
+
+Once you have connected both (or one of) google and github, we are ready to setup the code.
+
+### Installing Dependencies
+
+Install the necessary packages:
+
+```bash
+npm install next-auth @next-auth/google @next-auth/github
+```
+
+### Setting Up NextAuth with OAuth
+
+Create a auth.config.ts file in the pages/api/auth directory that includes both Google & Github env files:
+
+```tsx title="auth.config.ts"
+import bcrypt from "bcryptjs";
+import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+
+import Github from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import { LoginSchema } from "@/schemas";
+import { getUserByEmail } from "@/data/user";
+
+export default {
+  providers: [
+    // OAuth authentication providers... the raw data is found at /api/auth/providers
+    Github({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    }),
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+
+    Credentials({
+      async authorize(credentials) {
+        const validatedFields = await LoginSchema.safeParse(credentials);
+
+        if (validatedFields.success) {
+          const { email, password } = validatedFields.data;
+
+          const user = await getUserByEmail(email);
+          // by no password I mean that the user is using a social login (Google, Github, etc.)
+          if (!user || !user.password) return null;
+
+          // check if passwords match
+          const passwordsMatch = await bcrypt.compare(password, user.password);
+          // if the passwords match, return the user
+          if (passwordsMatch) return user;
+        }
+        return null;
+      },
+    }),
+  ],
+} satisfies NextAuthConfig;
+```
+
+## Using OAuth Buttons
+
+In a page.tsx file, call the SignIn button from next-auth & connect it to the buttons of both github and google (see below)
+
+```tsx title="components/auth/social.tsx"
+"use client";
+
+import { Button } from "@/components/ui/button";
+import { signIn } from "next-auth/react";
+import { FaGithub, FaGoogle } from "react-icons/fa";
+
+export const Social = () => {
+  const onClick = (provider: "google" | "github") => {
+    signIn(provider, {
+      callbackUrl: "/",
+    });
+  };
+  return (
+    <div className="flex gap-2 mt-3">
+      <Button
+        className="rounded-[5px] w-full border border-primary/20 bg-secondary text-primary hover:bg-primary/10 text-md"
+        onClick={() => onClick("google")}
+      >
+        <FaGoogle className="mr-2" /> Google
+      </Button>
+      <Button
+        className="rounded-[5px] w-full border border-primary/20 bg-secondary text-primary hover:bg-primary/10 text-md"
+        onClick={() => onClick("github")}
+      >
+        <FaGithub className="mr-2" /> Github
+      </Button>
+    </div>
+  );
+};
+```
+
+By following this guide, you will have set up GitHub & Google OAuth in your application, allowing users to sign in using their GitHub or Google accounts. Be sure to thoroughly test the authentication flow in your local environment before deploying to production.
+
+For more detailed information, refer to the [Auth.js](https://authjs.dev/) documentation, the [GitHub OAuth](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps) documentation, and the [Google OAuth](https://developers.google.com/identity/protocols/oauth2) documentation.

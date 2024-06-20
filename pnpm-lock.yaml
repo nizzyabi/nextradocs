@@ -17,6 +17,9 @@ importers:
       '@docusaurus/remark-plugin-npm2yarn':
         specifier: ^3.4.0
         version: 3.4.0
+      '@docusaurus/theme-search-algolia':
+        specifier: ^3.4.0
+        version: 3.4.0(@algolia/client-search@4.23.3)(@docusaurus/types@3.4.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.3)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.14.0)(typescript@5.2.2)
       '@mdx-js/react':
         specifier: ^3.0.0
         version: 3.0.1(@types/react@18.3.3)(react@18.3.1)
