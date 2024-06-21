@@ -1,8 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
-  --ifm-color-primary: hsl(208, 87%, 53%);
+  --ifm-color-primary: #1f8eef;
   --ifm-color-primary-border: #1f8eef77;
   --ifm-color-primary-border-half: #1f8eef44;
-  --ifm-color-primary-hover: #1f8eef11;
+  --ifm-color-primary-hover: #1f8eef30;
+  --ifm-color-primary-code: #1f8eef11;
   --ifm-color-primary-dark: #1a78d1;
   --ifm-color-primary-darker: #1769b8;
   --ifm-color-primary-darkest: #13599e;
@@ -17,4 +22,8 @@ code {
   background-color: var(--ifm-color-primary-hover);
   border-color: var(--ifm-color-primary-border-half);
   color: var(--ifm-color-primary);
+}
+
+footer {
+  z-index: 10;
 }
