@@ -5,33 +5,33 @@ import "./index.module.css";
 
 export default function MainPage(): JSX.Element {
   return (
-    <section className="w-full pt-12 md:pt-24 lg:pt-32 overflow-hidden">
+    <section className="w-full flex-1 pt-12 md:pt-24 lg:pt-32 overflow-hidden">
       <div className="flex flex-col items-center space-y-10 xl:space-y-16">
         <div className="grid gap-4 px-10 md:grid-cols-2 md:gap-16 max-w-6xl">
           <div>
-            <h1 className="lg:leading-tighter text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-[3.4rem] 2xl:text-[3.75rem]">
-              Learn To Code <br /> && Have Fun <br /> Doing It
+            <h1 className="w-full sm:mx-auto sm:w-1/2 md:mx-0 md:w-5/6 lg:w-2/3 xl:w-96 lg:leading-tighter text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl xl:text-[3.4rem] 2xl:text-[3.75rem]">
+              Learn To Code && Have Fun Doing It
             </h1>
           </div>
-          <div className="flex flex-col items-start space-y-4">
-            <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
-              Explore comprehensive guides and practical examples designed to
-              help you master the essential technologies I rely on across all my
-              applications. Whether you're looking to deepen your understanding
-              or seeking step-by-step tutorials, these resources cover
-              everything you need to enhance your development skills.
-            </p>
+          <div className="flex flex-col items-start gap-4">
+            <h2 className="m-0">Welcome to Nizar Docs!</h2>
+            <span className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+              This docs contain a series of guides with examples for libraries
+              and tools I use on all my projects. New content will be
+              continuously added, so feel free to suggest guides or
+              improvements!
+            </span>
             <div className="space-x-4">
               <Link
                 href="/docs/intro"
                 className="inline-flex text-white hover:text-white hover:no-underline h-9 items-center justify-center rounded-md bg-primary hover:bg-primary-dark px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
               >
-                Get Started
+                Read Docs
               </Link>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto w-full h-60 md:h-80 lg:h-96 relative text-white opacity-5">
+        <div className="max-w-7xl mx-auto w-full min-h-60 md:min-h-80 lg:min-h-96 flex-grow relative text-white opacity-5">
           <div className="w-full absolute top-0 left-0 h-full bg-gradient-to-b from-background z-10 pointer-events-none"></div>
           <QrCode className="absolute top-12 md:top-1/4 left-1/2 -translate-x-1/2 w-72 lg:w-96 h-auto hover:text-primary transition" />
           <Bug className="absolute top-12 right-12 md:w-48 lg:w-52 h-auto hidden xmd:block rotate-12 hover:text-primary transition" />
