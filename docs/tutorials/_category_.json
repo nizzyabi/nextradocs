@@ -2,7 +2,7 @@
   "label": "Tutorials",
   "position": 3,
   "link": {
-    "type": "link",
+    "type": "generated-index",
     "description": "Here is a few written tutorials on how to use or setup things I use in all my SaaS Apps"
   }
 }

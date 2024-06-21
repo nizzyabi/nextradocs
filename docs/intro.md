@@ -24,8 +24,8 @@ An SaaS (Service as a Software) template starter kit already set up, that requir
 
 ## Aditional information
 
-NizarAbiZaher - SaaS Starter Kit Author  
-dpaulos6 - README, Docs, Theme Configuration and UI
+NizarAbiZaher - Author  
+dpaulos6 - Collaborator
 
 <!-- ### Special thanks to all the contributors below: -->
 

@@ -1,0 +1,375 @@
+---
+title: "Stripe"
+---
+
+# Stripe Integration Guide
+
+This guide will help you set up Stripe in your application to receive payments and create recurring subscriptions.
+
+## Prerequisites
+
+You will need the following environment variables::
+
+```env title=".env"
+STRIPE_API_KEY=""
+STRIPE_WEBHOOK_SECRET=""
+```
+
+To obtain these, sign up at [stripe.com](https://stripe.com) and follow these steps:
+
+1. Get your secret key: Navigate to the Developers section in the Stripe dashboard and copy your secret key (starts with sk).
+2. Set up webhooks: Add a new endpoint for webhooks in your Stripe dashboard.
+
+## Install Stripe
+
+Install the Stripe package and log in:
+
+```bash
+npm i stripe
+
+stripe login
+```
+
+**NOTE**:Dont worry about the STRIPE WEBHOOK SECRET just yet, we need to setup stripe in our code before doing it.
+
+**_For a full detailed video, checkout the video below:_**
+
+<iframe
+  src="https://www.youtube.com/embed/5hSEEod_BuA?si=a8eLWB-VDP889QT-"
+  width="100%"
+  height="500px"
+  title="SWR-States"
+/>
+
+## Connect Stripe To Your Code
+
+Create a file named lib/stripe.ts to connect to Stripe using your API key.
+
+```tsx title="lib/stripe.ts"
+import Stripe from "stripe";
+
+export const stripe = new Stripe(process.env.STRIPE_API_KEY!, {
+  apiVersion: "2023-10-16",
+  typescript: true,
+});
+```
+
+## Webhook
+
+Webhooks handle events like payment sessions and subscription updates. Here's how to set up a webhook endpoint:
+
+```tsx title="app/api/webhook/route.ts"
+import Stripe from "stripe";
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { db } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
+
+export async function POST(req: Request) {
+  const body = await req.text();
+  const signature = headers().get("Stripe-Signature") as string;
+
+  let event: Stripe.Event;
+
+  try {
+    event = stripe.webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET!
+    );
+  } catch (error: any) {
+    return new NextResponse(`Webhook Error: ${error.message}`, { status: 400 });
+  }
+
+  const session = event.data.object as Stripe.Checkout.Session;
+
+  if (event.type === "checkout.session.completed") {
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    );
+    if (!session?.metadata?.userId) {
+      return new NextResponse("No user id found", { status: 400 });
+    }
+
+    await db.userSubscription.create({
+      data: {
+        userId: session.metadata.userId,
+        stripeSubscriptionId: subscription.id,
+        stripeCustomerId: subscription.customer as string,
+        stripePriceId: subscription.items.data[0].price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000
+        ),
+      },
+    });
+  }
+
+  if (event.type === "invoice.payment_failed") {
+    const subscription = await stripe.subscriptions.retrieve(
+      session.subscription as string
+    );
+
+    await db.userSubscription.update({
+      where: {
+        stripeSubscriptionId: subscription.id,
+      },
+      data: {
+        stripePriceId: subscription.items.data[0].price.id,
+        stripeCurrentPeriodEnd: new Date(
+          subscription.current_period_end * 1000
+        ),
+      },
+    });
+  }
+
+  return new NextResponse(null, { status: 200 });
+}
+```
+
+## Checkout
+
+Set up the checkout process to handle customer payments and reroute them to a success page upon successful payment.
+
+```tsx title="app/api/checkout/route.ts"
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { stripe } from "@/lib/stripe";
+import { NextResponse } from "next/server";
+
+export async function POST(req: Request) {
+  try {
+    const user = await auth();
+
+    if (!user || !user.user.id) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const userSubscription = await db.userSubscription.findUnique({
+      where: {
+        userId: user.user.id,
+      },
+    });
+
+    if (userSubscription && userSubscription.stripeCustomerId) {
+      const stripeSession = await stripe.billingPortal.sessions.create({
+        customer: userSubscription.stripeCustomerId,
+        return_url: process.env.APP_URL,
+      });
+
+      return new NextResponse(JSON.stringify({ url: stripeSession.url }));
+    }
+
+    const stripeSession = await stripe.checkout.sessions.create({
+      success_url: process.env.APP_URL,
+      cancel_url: process.env.APP_URL,
+      payment_method_types: ["card"],
+
+      mode: "subscription",
+      billing_address_collection: "auto",
+      customer_email: user?.user.email!,
+
+      line_items: [
+        {
+          price_data: {
+            currency: "USD",
+            product_data: {
+              name: "Your SaaS Subscription Name",
+              description: "Saas Subscription Description",
+            },
+            // cost (change this to the price of your product)
+            unit_amount: 899,
+            recurring: {
+              interval: "month",
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      metadata: {
+        userId: user.user.id,
+      },
+    });
+    return new NextResponse(JSON.stringify({ url: stripeSession.url }));
+  } catch (error) {
+    console.log("[STRIPE_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+```
+
+## Payment Button
+
+Create a button to redirect users to the Stripe payment page:
+
+```tsx title="components/pricing-card.tsx"
+"use client";
+import { Check, Sparkle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { toast } from "react-hot-toast";
+import axios from "axios";
+import { useCurrentUser } from "@/hooks/use-current-user";
+
+// Update Tiers Here
+export const tiers = [
+  {
+    name: "Your Competitor Name",
+    price: "18.99",
+    features: [
+      "Feature 1",
+      "Feature 2",
+      "Feature 3",
+      "Feature 4",
+      "Feature 5",
+      "Feature 6",
+      "Feature 7",
+      "Feature 8",
+      "Feature 9",
+      "Feature 10",
+    ],
+    cta: "Get Started",
+    yourProduct: false,
+  },
+  {
+    name: "Your Product Name",
+    priceBefore: "$19.99",
+    price: "8.99",
+    features: [
+      "Feature 1",
+      "Feature 2",
+      "Feature 3",
+      "Feature 4",
+      "Feature 5",
+      "Feature 6",
+      "Feature 7",
+      "Feature 8",
+      "Feature 9",
+      "Feature 10",
+    ],
+    cta: "Get Started",
+    yourProduct: true,
+  },
+];
+
+export const PricingCard = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const session = useCurrentUser();
+
+  const onClick = async () => {
+    if (!session) {
+      toast.error("Sign in to purchase!");
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await axios.post("/api/checkout");
+      window.location.href = response.data.url;
+    } catch (error) {
+      toast.error("An error occured! Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  return (
+    <section id="pricing" className="scroll-mt-4">
+      {/* Title */}
+      <div className="mx-auto flex flex-col items-center pb-8">
+        <h2 className="pb-4 text-4xl font-extrabold text-foreground">
+          Pricing
+        </h2>
+        <p className="text-md opacity-50 max-w-lg text-center">
+          Describe your product / service here that will impress the user & want
+          them to buy the product
+        </p>
+      </div>
+      {/* Pricing Card Display */}
+      <div className="flex flex-col sm:place-items-center md:flex-row items-center justify-center gap-6">
+        {tiers.map((tier) => (
+          <div
+            key={tier.name}
+            className={`relative flex flex-col p-6 shadow-lg rounded-lg justify-between ring-2 ring-inset w-full max-w-[550px]  ${
+              tier.yourProduct
+                ? "bg-primary/10 ring-primary/50"
+                : "bg-secondary ring-foreground/10"
+            }`}
+          >
+            {tier.yourProduct && (
+              <div className="px-3 py-1 text-primary-foreground text-sm bg-primary rounded-full inline-block absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                Popular
+              </div>
+            )}
+            {/* Pricing */}
+            <div>
+              <h3
+                className={`text-lg font-semibold ${
+                  tier.yourProduct ? "text-primary" : "text-foreground/70"
+                }`}
+              >
+                {tier.name}
+              </h3>
+              <div
+                className={`mt-4 ${
+                  tier.yourProduct ? "text-foreground/90" : "text-foreground/70"
+                }`}
+              >
+                {tier.priceBefore ? (
+                  <span className="font-semibold mr-2 line-through text-lg opacity-75">
+                    {tier.priceBefore}
+                  </span>
+                ) : null}
+                <span className="text-4xl font-bold">${tier.price}</span> /month
+              </div>
+              <ul className="mt-4 space-y-2.5">
+                {tier.features.map((feature, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center text-foreground/90 gap-2"
+                  >
+                    <Check
+                      className={`h-6 w-6 rounded-full ${
+                        tier.yourProduct ? "text-primary" : "text-foreground/70"
+                      }`}
+                    />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {/* Button */}
+            <div className="mt-6">
+              <Button
+                disabled={!tier.yourProduct}
+                onClick={onClick}
+                className={`w-full ${
+                  tier.yourProduct && "hover:-translate-y-1"
+                }`}
+              >
+                {tier.cta}
+                <Sparkle className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+```
+
+## Testing
+
+To test Stripe in your local environment, run:
+
+```bash
+stripe listen --forward-to localhost:3000/api/webhook
+```
+
+This command will listen for webhook events and forward them to your local endpoint, allowing you to test the Stripe integration. When successful, you'll be redirected to the Stripe payment page, as shown below:
+
+![Dash](@site/static/img/stripe-paymentpage.png)
+
+## Conclusion
+
+By following this guide, you should have a working Stripe integration in your application, capable of handling both one-time payments and recurring subscriptions. Ensure to thoroughly test each part of the integration in your local environment before deploying to production.
+
+For additional help, refer to the [Stripe documentation](https://docs.stripe.com/) or the detailed video guide above.
